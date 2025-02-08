@@ -1,7 +1,12 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from "cors";
-import doctorRoutes from "./routes/doctorRoutes";
+import doctorRouter from "./routes/doctorRoutes";
+import hospitalRouter from './routes/hospitalRoutes';
+import userRouter from './routes/userRoutes';
+import adminRouter from './routes/adminRoutes';
+import docHospitalRouter from './routes/docHospitalRoutes';
+import appointmentsRouter from './routes/appointmentsRoutes';
 import mongoose from "mongoose";
 
 
@@ -16,8 +21,12 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 
-app.use('/api/doctors', doctorRoutes);
-
+app.use('/api/doctors', doctorRouter);
+app.use('/api/hospitals', hospitalRouter);
+app.use('/api/users', userRouter);
+app.use('/api/admins', adminRouter);
+app.use('/api/dochospitals', docHospitalRouter);
+app.use('/api/appointments', appointmentsRouter);
 
 const mongoURI = process.env.MONGODB_URI as string;
 
