@@ -7,7 +7,7 @@ const router = express.Router();
 // Get all users
 router.get('/', async (req: Request, res: Response): Promise<void> => {
     try {
-        const users = await User.find();
+        const users = await User.find().select('-password');
         res.json(users);
     } catch (error) {
         console.error(error);
@@ -15,67 +15,10 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     }
 });
 
-// Create a new user (Signup)
-router.post('/', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { name, email, phone, password } = req.body;
-
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            res.status(400).json({ message: 'User already exists' });
-            return;
-        }
-
-        // Hash password before saving
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser = new User({
-            name,
-            email,
-            phone,
-            password: hashedPassword
-        });
-
-        await newUser.save();
-        res.status(201).json({ message: 'User created successfully', user: { name, email, phone } });
-    } catch (error: any) {
-        console.error('Error saving user:', error);
-        res.status(400).json({ message: 'Failed to save user', error: error.message });
-    }
-});
-
-// User Login
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { email, password } = req.body;
-
-        // Check if user exists
-        const user = await User.findOne({ email });
-        if (!user) {
-            res.status(401).json({ message: 'Invalid email or password' });
-            return;
-        }
-
-        // Compare passwords
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            res.status(401).json({ message: 'Invalid email or password' });
-            return;
-        }
-
-        res.status(200).json({ message: 'Login successful', user: { name: user.name, email: user.email, phone: user.phone } });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
 // Get a user by email
 router.get('/:email', async (req: Request, res: Response): Promise<void> => {
     try {
-        const user = await User.findOne({ email: req.params.email });
+        const user = await User.findOne({ email: req.params.email }).select('-password');
         if (!user) {
             res.status(404).json({ message: 'User not found' });
             return;
@@ -94,7 +37,7 @@ router.put('/:email', async (req: Request, res: Response): Promise<void> => {
             { email: req.params.email },
             req.body,
             { new: true }
-        );
+        ).select('-password');
         if (!updatedUser) {
             res.status(404).json({ message: 'User not found' });
             return;
@@ -120,5 +63,51 @@ router.delete('/:email', async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+
+// @ts-ignore
+export async function registerUser(user: User) {
+    try {
+        const existingUser = await User.findOne({ email: user.email });
+        if (existingUser) {
+            return false;
+        }
+
+        // Hash password before saving
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(user.password, salt);
+
+        const newUser = new User({
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            password: hashedPassword
+        });
+
+        let savedUser = await newUser.save();
+
+        if (!savedUser) {
+            return false;
+        }
+
+        return true;
+    } catch (error: any) {
+        console.error('Error saving user:', error);
+        return false;
+    }
+}
+
+
+export async function verifyUser(email: string, password: string) {
+    // Check if user exists
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return false;
+    }
+
+    return await bcrypt.compare(password, user.password);
+
+}
 
 export default router;

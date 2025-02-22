@@ -7,7 +7,10 @@ import userRouter from './routes/userRoutes';
 import adminRouter from './routes/adminRoutes';
 import docHospitalRouter from './routes/docHospitalRoutes';
 import appointmentsRouter from './routes/appointmentsRoutes';
+import categoryRouter from './routes/categoryRoutes';
 import mongoose from "mongoose";
+import authRouter from "./routes/auth-routes";
+import {authenticateToken} from "./routes/auth-routes";
 
 
 dotenv.config();
@@ -20,8 +23,11 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Server is running');
 });
 
+app.use('/api/auth', authRouter);
+app.use(authenticateToken);
 
 app.use('/api/doctors', doctorRouter);
+app.use('/api/categories', categoryRouter);
 app.use('/api/hospitals', hospitalRouter);
 app.use('/api/users', userRouter);
 app.use('/api/admins', adminRouter);
