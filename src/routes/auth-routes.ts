@@ -23,12 +23,14 @@ router.post("/user/login",async (req, res) => {
             const refreshToken = jwt.sign({ email }, process.env.REFRESH_TOKEN as Secret, {expiresIn: "70d"});
             res.json({accessToken : token, refreshToken : refreshToken, user : user});
         }else{
-            res.sendStatus(403).send('Invalid credentials')
+            res.status(403).send('Invalid credentials')
+            return;
         }
 
     } catch (err) {
         console.log(err);
         res.status(400).send(err);
+        return;
     }
 });
 
@@ -70,7 +72,8 @@ router.post("/admin/login",async (req, res) => {
             const refreshToken = jwt.sign({ email }, process.env.REFRESH_TOKEN as Secret, {expiresIn: "70d"});
             res.json({accessToken : token, refreshToken : refreshToken, admin : admin});
         }else{
-            res.sendStatus(403).send('Invalid credentials')
+            res.status(403).send('Invalid credentials')
+            return;
         }
 
     } catch (err) {
@@ -80,7 +83,7 @@ router.post("/admin/login",async (req, res) => {
 });
 
 router.post("/admin/register",async (req, res) => {
-    const { name, email, phone, password } = req.body;
+    const { name, email, password } = req.body;
 
     const newAdmin = new admin({
         name,
