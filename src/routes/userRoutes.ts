@@ -73,7 +73,6 @@ export async function registerUser(user: User) {
             return false;
         }
 
-        // Hash password before saving
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(user.password, salt);
 
@@ -107,7 +106,10 @@ export async function verifyUser(email: string, password: string) {
     }
 
     return await bcrypt.compare(password, user.password);
+}
 
+export async function getUserByEmail(email: string) {
+    return User.findOne({email}).select('-password');
 }
 
 export default router;

@@ -1,8 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 import jwt, {Secret} from "jsonwebtoken";
-import {registerUser, verifyUser} from "./userRoutes";
+import {getUserByEmail, registerUser, verifyUser} from "./userRoutes";
 import user from "../models/user";
+import {getAdminByEmail, registerAdmin, verifyAdmin} from "./adminRoutes";
+import admin from "../models/admin";
 
 dotenv.config();
 
@@ -16,9 +18,10 @@ router.post("/user/login",async (req, res) => {
         const isVerified = await verifyUser(email, password);
 
         if(isVerified){
+            const user = await getUserByEmail(email);
             const token = jwt.sign({ email }, process.env.SECRET_KEY as Secret, {expiresIn: "7d"});
             const refreshToken = jwt.sign({ email }, process.env.REFRESH_TOKEN as Secret, {expiresIn: "70d"});
-            res.json({accessToken : token, refreshToken : refreshToken});
+            res.json({accessToken : token, refreshToken : refreshToken, user : user});
         }else{
             res.sendStatus(403).send('Invalid credentials')
         }
@@ -41,6 +44,52 @@ router.post("/user/register",async (req, res) => {
 
     try {
         const isRegistered = await registerUser(newUser);
+
+        if (!isRegistered) {
+            res.status(400).json({ message: 'User already exists' });
+            return;
+        }
+
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (err) {
+        console.log(err)
+        res.status(401).json(err);
+    }
+});
+
+router.post("/admin/login",async (req, res) => {
+    const email = req.body.email;
+    const password = req.body.password;
+
+    try {
+        const isVerified = await verifyAdmin(email, password);
+
+        if(isVerified){
+            const admin = await getAdminByEmail(email);
+            const token = jwt.sign({ email }, process.env.SECRET_KEY as Secret, {expiresIn: "7d"});
+            const refreshToken = jwt.sign({ email }, process.env.REFRESH_TOKEN as Secret, {expiresIn: "70d"});
+            res.json({accessToken : token, refreshToken : refreshToken, admin : admin});
+        }else{
+            res.sendStatus(403).send('Invalid credentials')
+        }
+
+    } catch (err) {
+        console.log(err);
+        res.status(400).send(err);
+    }
+});
+
+router.post("/admin/register",async (req, res) => {
+    const { name, email, phone, password } = req.body;
+
+    const newAdmin = new admin({
+        name,
+        email,
+        password
+    });
+
+    try {
+        const isRegistered = await registerAdmin(newAdmin);
 
         if (!isRegistered) {
             res.status(400).json({ message: 'User already exists' });

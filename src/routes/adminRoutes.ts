@@ -4,66 +4,12 @@ import Admin from '../models/admin';
 
 const router = express.Router();
 
-// Get all admins (excluding passwords)
 router.get('/', async (req: Request, res: Response): Promise<void> => {
     try {
         const admins = await Admin.find().select('-password'); // Exclude password field
         res.json(admins);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Create a new admin with hashed password
-router.post('/', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { name, email, password } = req.body;
-
-        // Check if admin already exists
-        const existingAdmin = await Admin.findOne({ email });
-        if (existingAdmin) {
-            res.status(400).json({ message: 'Admin already exists' });
-            return;
-        }
-
-        // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Create new admin
-        const newAdmin = new Admin({ name, email, password: hashedPassword });
-        await newAdmin.save();
-
-        res.status(201).json({ message: 'Admin created successfully', admin: {name, email} });
-    } catch (error: any) {
-        console.error('Error saving admin:', error);
-        res.status(400).json({ message: 'Failed to save admin', error: error.message });
-    }
-});
-
-// Login admin (no JWT, just success message)
-router.post('/login', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const { email, password } = req.body;
-
-        // Find admin by email
-        const admin = await Admin.findOne({ email });
-        if (!admin) {
-            res.status(400).json({ message: 'Invalid email or password' });
-            return;
-        }
-
-        // Compare passwords
-        const isMatch = await bcrypt.compare(password, admin.password);
-        if (!isMatch) {
-            res.status(400).json({ message: 'Invalid email or password' });
-            return;
-        }
-
-        res.status(200).json({ message: 'Login successful', admin: { name: admin.name, email: admin.email } });
-    } catch (error) {
-        console.error('Login error:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -128,5 +74,51 @@ router.delete('/:email', async (req: Request, res: Response): Promise<void> => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+// @ts-ignore
+export async function registerAdmin(admin: Admin) {
+    try {
+        const existingAdmin = await Admin.findOne({ email: admin.email });
+        if (existingAdmin) {
+            return false;
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(admin.password, salt);
+
+        const newAdmin = new Admin({
+            name: admin.name,
+            email: admin.email,
+            password: hashedPassword
+        });
+
+        let savedAdmin = await newAdmin.save();
+
+        if (!savedAdmin) {
+            return false;
+        }
+
+        return true;
+    } catch (error: any) {
+        console.error('Error saving user:', error);
+        return false;
+    }
+}
+
+
+export async function verifyAdmin(email: string, password: string) {
+    const admin = await Admin.findOne({ email });
+
+    if (!admin) {
+        return false;
+    }
+
+    return await bcrypt.compare(password, admin.password);
+}
+
+export async function getAdminByEmail(email: string) {
+    return Admin.findOne({email}).select('-password');
+}
+
 
 export default router;
