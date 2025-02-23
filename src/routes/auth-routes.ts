@@ -124,10 +124,14 @@ router.post("/refresh-token", async (req, res) => {
 })
 
 export function authenticateToken(req : express.Request, res : express.Response, next : express.NextFunction){
+
+    if (req.method === "GET") {
+        return next();
+    }
+
     const authHeader = req.headers.authorization;
     const token = authHeader?.split(' ')[1];
 
-    console.log(token);
     if(!token) {
         res.status(401).send('No token provided');
         return;
@@ -135,7 +139,6 @@ export function authenticateToken(req : express.Request, res : express.Response,
 
     try{
         const payload = jwt.verify(token as string, process.env.SECRET_KEY as Secret) as {email: string, iat: number};
-        console.log(payload.email);
         req.body.email = payload.email;
         next();
     }catch(err){
