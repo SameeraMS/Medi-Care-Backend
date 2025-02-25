@@ -61,8 +61,8 @@ router.put('/:id', async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        const updatedDocHospital = await DocHospital.findByIdAndUpdate(
-            req.params.id,
+        const updatedDocHospital = await DocHospital.findOneAndUpdate(
+            { docId, hospitalId },
             { hospitalId, category, docId, fee, days, timeStart, timeEnd },
             { new: true, runValidators: true }
         );

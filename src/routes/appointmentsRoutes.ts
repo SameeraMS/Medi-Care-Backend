@@ -121,7 +121,7 @@ router.get('/user/:userId', async (req: Request, res: Response): Promise<void> =
             .populate('hospitalId');
 
         if (!appointments || appointments.length === 0) {
-            res.status(404).json({ message: 'No appointments found for this user' });
+            res.status(200).json(appointments);
             return;
         }
 
