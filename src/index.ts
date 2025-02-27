@@ -16,7 +16,13 @@ import {authenticateToken} from "./routes/auth-routes";
 dotenv.config();
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
 app.use(express.json());
 
 app.get('/', (req: Request, res: Response) => {
