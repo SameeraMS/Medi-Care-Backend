@@ -1,11 +1,11 @@
 {
   "name": "medicare-backend",
   "version": "1.0.0",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "nodemon src/index.js",
+    "start": "nodemon dist/index.js",
     "build": "tsc",
-    "dev": "nodemon src/index.ts"
+    "dev": "nodemon dist/index.ts"
   },
   "keywords": [],
   "author": "",
