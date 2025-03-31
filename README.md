@@ -61,7 +61,7 @@ npm install
 Create a `.env` file in the backend directory and add the following:
 ```env
 PORT=3000
-DATABASE_URI=mongodb+srv://your-db-url
+MONGODB_URI=mongodb+srv://your-db-url
 JWT_SECRET=your-secret-key
 REFRESH_TOKEN=your-refresh-token
 ```
